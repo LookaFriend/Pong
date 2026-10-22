@@ -1,3 +1,176 @@
-import pygame
-import time
-import random
+#basics
+import pygame ,sys, random, time
+
+pygame.init()
+
+font = pygame.font.Font(None, 10)
+
+class Button():
+    def __init__(self, text, x, y, enabled):
+        global font
+        self.text = text
+        self.x = x
+        self.y = y
+        self.enabled = enabled
+        self.draw()
+
+    def draw(self):
+        button_text = font.render(self.text, True, 'white')
+        button_rect = pygame.rect.Rect((self.x, self.y),(10,100))
+        pygame.draw.rect(screen, 'white', button_rect, 2 ,5)
+        screen.blit(button_text, (self.x +3 , self.y +3))
+
+
+def animate_ball():
+        global ballspeed_x, ballspeed_y, timer, time_between, speed_multi
+        #move objects
+        ball.x += ballspeed_x
+        ball.y += ballspeed_y
+    
+        #collide with walls and items
+        if ball.bottom >= HEIGHT or ball.top <= 0:
+            ballspeed_y *= -1
+    
+        if ball.left <= 0: 
+            point_gain("player")
+            
+        if ball.right >= WIDTH:
+            point_gain("cpu")
+            
+        #collide with paddles
+        if ball.colliderect(player) or ball.colliderect(cpu):
+            ballspeed_x *= -1
+            ballspeed_x *= 1.1 #speed up ball
+            ballspeed_y *= 1.1
+  
+def point_gain(winner):
+    global cpu_points, player_points
+
+    if winner == "cpu":
+        cpu_points += 1
+    
+        reset_ball()
+    if winner == "player":
+        player_points += 1
+        
+        reset_ball()
+
+def reset_ball():
+    global ballspeed_x, ballspeed_y, cpu_speed, timer , cpu_y
+
+    ballspeed_x = 6
+    ballspeed_y = 6
+    ball.x = WIDTH/2 -10
+    ball.y = HEIGHT/2
+    ballspeed_x *= random.choice ([1,-1])
+    ballspeed_y *= random.choice ([1,-1])
+    
+def animate_player():
+    player.y += player_speed
+
+    if player.top <= 0:
+        player.top = 0
+
+    if player.bottom >= HEIGHT:
+        player.bottom = HEIGHT
+
+def animate_cpu():
+    global cpu_speed, reset_ball
+    cpu.y += cpu_speed
+
+    
+    if ball.centery <= cpu.centery:
+            cpu_speed = -6
+    if ball.centery >= cpu.centery:
+            cpu_speed = 6
+    
+    if cpu.top <= 0:
+            cpu.top = 0
+    if cpu.bottom >= HEIGHT:
+            cpu.bottom = HEIGHT
+
+    
+
+
+pygame.display.set_caption("Pong")
+WIDTH, HEIGHT = 1280, 760
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+clock= pygame.time.Clock()
+
+ballspeed_x = 6
+ballspeed_y = 6
+player_speed = 0
+cpu_speed = 6
+
+cpu_points = 0
+player_points = 0
+
+#game items
+cpu = pygame.Rect(0,0,20,100)
+cpu.center = (WIDTH-50, HEIGHT/2)
+
+player = pygame.Rect(0,0,20,100)
+player.center = (50, HEIGHT/2)
+
+ball = pygame.Rect(0,0,30,30)
+ball.center = (WIDTH/2, HEIGHT/2)
+
+resetb = pygame.Rect(0,0,100,40)
+resetb.center = (WIDTH/2, HEIGHT -700)
+resetb_font = pygame.font.Font(None,20)
+
+score_font = pygame.font.Font(None, 100)
+        
+
+#game loop
+while True:
+    #event checking
+    for event in pygame.event.get():  
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.KEYDOWN: #move player paddle
+            if event.key == pygame.K_UP:
+                player_speed = -6
+            if event.key == pygame.K_DOWN:
+                player_speed = 6
+        if event.type == pygame.KEYUP: 
+            if event.key == pygame.K_UP:
+                player_speed = 0
+            if event.key == pygame.K_DOWN:
+                player_speed = 0
+
+        
+    #animate objects
+    animate_ball()
+    animate_player()
+    animate_cpu()
+    
+    
+    reset_button = Button('Reset', WIDTH/2 , -700, True) 
+    
+    screen.fill('black') #fill screen with black
+        #draw midline
+
+    cpu_score_suface = score_font.render(str(cpu_points),True, "white")
+    player_score_suface = score_font.render(str(player_points),True, "white")
+    screen.blit(cpu_score_suface,(WIDTH/4,20))
+    screen.blit(player_score_suface,(3*WIDTH/4,20))
+
+    pygame.draw.aaline(screen, 'white', (WIDTH/2, 0), (WIDTH/2, HEIGHT))
+        #draw a white ball
+    pygame.draw.ellipse(screen, 'white', ball, 0)
+        #draw paddle for cpu
+    pygame.draw.rect(screen, 'white', cpu, 0)
+        #draw paddle for player
+    pygame.draw.rect(screen, 'white', player, 0)
+    
+
+
+    #update display
+    pygame.display.update()
+    clock.tick(60) #fps
+
+
+
