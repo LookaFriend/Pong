@@ -3,26 +3,49 @@ import pygame ,sys, random, time
 
 pygame.init()
 
-font = pygame.font.Font(None, 10)
+clock = pygame.time.Clock()
 
-class Button():
-    def __init__(self, text, x, y, enabled):
-        global font
+pygame.display.set_caption("Pong")
+WIDTH, HEIGHT = 1280, 760
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+
+class Button:#doesnt work yet
+    def __init__(self, x, y, width, height, text=''):
         self.text = text
         self.x = x
         self.y = y
-        self.enabled = enabled
-        self.draw()
+        self.width = width
+        self.height = height
+        
+    
+    def draw(self,screen):
 
-    def draw(self):
-        button_text = font.render(self.text, True, 'white')
-        button_rect = pygame.rect.Rect((self.x, self.y),(10,100))
-        pygame.draw.rect(screen, 'white', button_rect, 2 ,5)
-        screen.blit(button_text, (self.x +3 , self.y +3))
+        pygame.draw.Rect(0,0,100,40)
+        
+        if self.text != '':
+            font = pygame.font.SysFont(None, 10)
+            text = font.render(self.text, 1, 'white')
+            screen.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.y/2 - text.get_height()/2)))
 
+    def isOver(self, pos):
+        pos = pygame.mouse.get_pos()
+        if pos[0] > resetb.x and pos[0] < resetb.x + resetb.width: #determine if mouse is in button x
+            if pos[1] > resetb.y and pos[1] < resetb.y + resetb.height: #determine if mouse is in button y
+                return True
+        return False
+            
+def reset_button():
+    global pos, player_points, cpu_points
+    #pos[0] = x , pos[1] = y
+    if pos[0] > resetb.x and pos[0] < resetb.x + resetb.width: #determine if mouse is in button x
+        if pos[1] > resetb.y and pos[1] < resetb.y + resetb.height: #determine if mouse is in button y
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                cpu_points = 0
+                player_points = 0
 
 def animate_ball():
-        global ballspeed_x, ballspeed_y, timer, time_between, speed_multi
+        global ballspeed_x, ballspeed_y, cpu_speed,speed_num
         #move objects
         ball.x += ballspeed_x
         ball.y += ballspeed_y
@@ -40,9 +63,12 @@ def animate_ball():
         #collide with paddles
         if ball.colliderect(player) or ball.colliderect(cpu):
             ballspeed_x *= -1
-            ballspeed_x *= 1.1 #speed up ball
-            ballspeed_y *= 1.1
-  
+            ballspeed_x *= 1.09 #speed up ball
+            ballspeed_y *= 1.09
+            speed_num *= random.choice([1.07,1.08,1.09,])
+        
+
+              
 def point_gain(winner):
     global cpu_points, player_points
 
@@ -56,7 +82,7 @@ def point_gain(winner):
         reset_ball()
 
 def reset_ball():
-    global ballspeed_x, ballspeed_y, cpu_speed, timer , cpu_y
+    global ballspeed_x, ballspeed_y, cpu_speed, speed_num
 
     ballspeed_x = 6
     ballspeed_y = 6
@@ -64,7 +90,8 @@ def reset_ball():
     ball.y = HEIGHT/2
     ballspeed_x *= random.choice ([1,-1])
     ballspeed_y *= random.choice ([1,-1])
-    
+    speed_num = 6
+
 def animate_player():
     player.y += player_speed
 
@@ -75,38 +102,35 @@ def animate_player():
         player.bottom = HEIGHT
 
 def animate_cpu():
-    global cpu_speed, reset_ball
+    global cpu_speed, reset_ball, ballspeed_y, cpu_speed,speed_num
     cpu.y += cpu_speed
 
-    
-    if ball.centery <= cpu.centery:
-            cpu_speed = -6
-    if ball.centery >= cpu.centery:
-            cpu_speed = 6
+    if ball.centery <= cpu.centery: #if ball above, paddle go up
+            cpu_speed = -1* speed_num
+
+    if ball.centery >= cpu.centery: #if ball below, paddle go down
+            
+            cpu_speed = speed_num
     
     if cpu.top <= 0:
             cpu.top = 0
     if cpu.bottom >= HEIGHT:
             cpu.bottom = HEIGHT
 
+def text(text, font, color, x, y):#text or smt idk
+    txt = font.render(text, True, color)
+    screen.blit(txt, (x,y))
     
-
-
-pygame.display.set_caption("Pong")
-WIDTH, HEIGHT = 1280, 760
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-clock= pygame.time.Clock()
-
+#game items
 ballspeed_x = 6
 ballspeed_y = 6
 player_speed = 0
 cpu_speed = 6
+speed_num = 6
 
 cpu_points = 0
 player_points = 0
 
-#game items
 cpu = pygame.Rect(0,0,20,100)
 cpu.center = (WIDTH-50, HEIGHT/2)
 
@@ -118,15 +142,18 @@ ball.center = (WIDTH/2, HEIGHT/2)
 
 resetb = pygame.Rect(0,0,100,40)
 resetb.center = (WIDTH/2, HEIGHT -700)
-resetb_font = pygame.font.Font(None,20)
+resetb_font = pygame.font.Font(None,40)
 
+rgb_button = pygame.Rect(0,0,60,30)
+rgb_button.center = (WIDTH/2, 20)
 score_font = pygame.font.Font(None, 100)
-        
-
+colors = 'black','dark green','light blue','dark blue','dark red'
+rgb = 'black'
 #game loop
 while True:
     #event checking
-    for event in pygame.event.get():  
+    for event in pygame.event.get():
+        pos = pygame.mouse.get_pos() #get mouse position 
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
@@ -140,19 +167,33 @@ while True:
                 player_speed = 0
             if event.key == pygame.K_DOWN:
                 player_speed = 0
+        
+        
 
         
+        
+                    
+                    
+        if pos[0] > rgb_button.x and pos[0] < rgb_button.x + rgb_button.width: #determine if mouse is in button x
+            if pos[1] > rgb_button.y and pos[1] < rgb_button.y + rgb_button.height: #determine if mouse is in button y
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    rgb = random.choice(colors)
+                    
+
+    
+    
     #animate objects
     animate_ball()
     animate_player()
     animate_cpu()
+    reset_button()
     
+     
     
-    reset_button = Button('Reset', WIDTH/2 , -700, True) 
-    
-    screen.fill('black') #fill screen with black
+    screen.fill(rgb) #fill screen with black
         #draw midline
-
+    rgb_button_text = resetb_font.render("RGB", True, 'blue')
+    resetb_text = resetb_font.render("Reset",True, 'white' )
     cpu_score_suface = score_font.render(str(cpu_points),True, "white")
     player_score_suface = score_font.render(str(player_points),True, "white")
     screen.blit(cpu_score_suface,(WIDTH/4,20))
@@ -165,12 +206,15 @@ while True:
     pygame.draw.rect(screen, 'white', cpu, 0)
         #draw paddle for player
     pygame.draw.rect(screen, 'white', player, 0)
-    
+        #draw button
+    pygame.draw.rect(screen, 'white', resetb, 2 )
 
+    pygame.draw.rect(screen, 'white', rgb_button, 0)
 
+    screen.blit(resetb_text,(resetb.x+12, resetb.y+8))
+    screen.blit(rgb_button_text,(rgb_button.x, rgb_button.y+2))
+    pygame.display.flip()
     #update display
     pygame.display.update()
     clock.tick(60) #fps
-
-
-
+                                                                                              
