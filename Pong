@@ -8,7 +8,7 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Pong")
 WIDTH, HEIGHT = 1280, 760
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
+surface = pygame.Surface((WIDTH,HEIGHT), pygame.SRCALPHA)
 
 class Button:#doesnt work yet
     def __init__(self, x, y, width, height, text=''):
@@ -18,7 +18,6 @@ class Button:#doesnt work yet
         self.width = width
         self.height = height
         
-    
     def draw(self,screen):
 
         pygame.draw.Rect(0,0,100,40)
@@ -65,10 +64,8 @@ def animate_ball():
             ballspeed_x *= -1
             ballspeed_x *= 1.09 #speed up ball
             ballspeed_y *= 1.09
-            speed_num *= random.choice([1.07,1.08,1.09,])
-        
-
-              
+            speed_num *= random.choice([1.072,1.08,1.09,])
+          
 def point_gain(winner):
     global cpu_points, player_points
 
@@ -117,9 +114,12 @@ def animate_cpu():
     if cpu.bottom >= HEIGHT:
             cpu.bottom = HEIGHT
 
-def text(text, font, color, x, y):#text or smt idk
-    txt = font.render(text, True, color)
-    screen.blit(txt, (x,y))
+def draw_pause():
+    font = pygame.font.Font(None, 100)
+    pygame.draw.rect(surface,(128,128,128 ,170),[0,0,WIDTH,HEIGHT])
+    pygame.draw.rect(surface,'dark gray', [200,150,600,50],0,10)
+    surface.blit(font.render('Paused: Esc to Resume', True, 'black'), (220,160))
+    screen.blit(surface,(0,0))
     
 #game items
 ballspeed_x = 6
@@ -139,16 +139,32 @@ player.center = (50, HEIGHT/2)
 
 ball = pygame.Rect(0,0,30,30)
 ball.center = (WIDTH/2, HEIGHT/2)
-
+ 
 resetb = pygame.Rect(0,0,100,40)
-resetb.center = (WIDTH/2, HEIGHT -700)
+resetb.center = (WIDTH/2, 74)
 resetb_font = pygame.font.Font(None,40)
 
-rgb_button = pygame.Rect(0,0,60,30)
-rgb_button.center = (WIDTH/2, 20)
+rgb_button = pygame.Rect(0,0,60,28)
+rgb_button.center = (WIDTH/2, 14.8)
 score_font = pygame.font.Font(None, 100)
 colors = 'black','dark green','light blue','dark blue','dark red'
 rgb = 'black'
+
+circle = pygame.Rect(0,0,400,400)
+circle.center = (WIDTH/2 , HEIGHT/2)
+
+bs_button = pygame.Rect(0,0,60,20)
+bs_button.center = (WIDTH/2, 42.4)
+bs_font = pygame.font.Font(None, 30)
+
+pause_button = pygame.Rect(0,0,30,30)
+pause_button.center = (30,30)
+pause_font = pygame.font.Font(None, 100)
+
+
+
+pause = False
+
 #game loop
 while True:
     #event checking
@@ -162,6 +178,8 @@ while True:
                 player_speed = -6
             if event.key == pygame.K_DOWN:
                 player_speed = 6
+            if event.key == pygame.K_ESCAPE:
+                pause = False
         if event.type == pygame.KEYUP: 
             if event.key == pygame.K_UP:
                 player_speed = 0
@@ -169,30 +187,41 @@ while True:
                 player_speed = 0
         
         
-
-        
-        
-                    
                     
         if pos[0] > rgb_button.x and pos[0] < rgb_button.x + rgb_button.width: #determine if mouse is in button x
             if pos[1] > rgb_button.y and pos[1] < rgb_button.y + rgb_button.height: #determine if mouse is in button y
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     rgb = random.choice(colors)
-                    
 
-    
+        
+        if event.type == pygame.MOUSEBUTTONDOWN:#better way to make buttons
+            if bs_button.collidepoint(event.pos):
+                speed_num *=1.5
+                ballspeed_y *=1.5
+                ballspeed_x *=1.5
+
+        if pause is True:
+            speed_num =0
+            ballspeed_y =0
+            ballspeed_x =0
+            
+        
+        
+
     
     #animate objects
     animate_ball()
     animate_player()
     animate_cpu()
     reset_button()
+    draw_pause()
     
-     
     
     screen.fill(rgb) #fill screen with black
         #draw midline
-    rgb_button_text = resetb_font.render("RGB", True, 'blue')
+    
+    bs_text = bs_font.render("Speed", True, 'dark orange')
+    rgb_button_text = resetb_font.render("RGB", True, 'dark blue')
     resetb_text = resetb_font.render("Reset",True, 'white' )
     cpu_score_suface = score_font.render(str(cpu_points),True, "white")
     player_score_suface = score_font.render(str(player_points),True, "white")
@@ -207,14 +236,20 @@ while True:
         #draw paddle for player
     pygame.draw.rect(screen, 'white', player, 0)
         #draw button
-    pygame.draw.rect(screen, 'white', resetb, 2 )
+    pygame.draw.rect(screen, 'white', resetb, 2, 3)
 
-    pygame.draw.rect(screen, 'white', rgb_button, 0)
+    pygame.draw.rect(screen, 'white', rgb_button, 0, 4)
+
+    pygame.draw.ellipse(screen, 'white', circle, 1)
+
+    pygame.draw.rect(screen, 'white', bs_button, 0, 3)
+
+    pygame.draw.rect(screen, 'white', pause_button, 1, 3)
 
     screen.blit(resetb_text,(resetb.x+12, resetb.y+8))
     screen.blit(rgb_button_text,(rgb_button.x, rgb_button.y+2))
+    screen.blit(bs_text, (bs_button.x, bs_button.y ))
     pygame.display.flip()
     #update display
     pygame.display.update()
     clock.tick(60) #fps
-                                                                                              
